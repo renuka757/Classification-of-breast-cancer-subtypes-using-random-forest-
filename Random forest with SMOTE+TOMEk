@@ -1,0 +1,40 @@
+from imblearn.combine import SMOTETomek
+from collections import Counter
+from sklearn.metrics import classification_report,ConfusionMatrixDisplay
+
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=0) 
+
+# Counting the number of instances in each class before oversampling
+counter = Counter(y_train)
+print('Before', counter)
+# Oversampling the train dataset using SMOTE + Tomek
+smtom = SMOTETomek(random_state=139)
+X_train_smtom, y_train_smtom = smtom.fit_resample(X_train, y_train)
+# Counting the number of instances in each class after oversampling
+counter = Counter(y_train_smtom)
+print('After', counter)
+
+model=RandomForestClassifier(n_estimators=500,random_state=0)
+
+model.fit(X_train_smtom,y_train_smtom)
+predictions=model.predict(X_test)
+
+cr=classification_report(y_test,predictions,output_dict=True)
+crdf=pd.DataFrame(cr).transpose()
+crdf.to_csv('classification_report_after_smote+Tomek.csv', index=True)
+
+ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, normalize='true', cmap='Reds')
+plt.show()
+
+pca=PCA(n_components=2)
+pca_smtom=pca.fit_transform(X_train_smtom)
+
+smtom_df=pd.DataFrame({
+    "PC1":pca_smtom[:,0],
+    "PC2":pca_smtom[:,1],
+    "class":y_train_smtom
+})
+
+import seaborn as sns
+sns.scatterplot(data=smtom_df, x='PC1', y='PC2', hue='class')
+plt.title("PCA Plot after Smote+Tomek")
