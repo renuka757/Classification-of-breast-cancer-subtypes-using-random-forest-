@@ -1,0 +1,45 @@
+from sklearn.model_selection import train_test_split 
+
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=0) 
+from sklearn.ensemble import RandomForestClassifier 
+
+model = RandomForestClassifier(n_estimators=500,random_state=0) 
+model.fit(X_train, y_train) 
+
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score 
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import ConfusionMatrixDisplay,classification_report,confusion_matrix
+from sklearn.decomposition import PCA
+predictions=model.predict(X_test)
+
+
+# cm = confusion_matrix(y_test,predictions)
+# labels=np.unique(y_test)
+# # print(cm)
+# # print(y_test)
+cr = classification_report(y_test,predictions,output_dict=True) 
+print(cr)
+crdf=pd.DataFrame(cr).transpose()
+crdf.to_csv('classification_report.csv', index=True)
+
+model_accuracy = accuracy_score(y_test, predictions) 
+sns.heatmap(cm,xticklabels=labels,yticklabels=labels,cmap="Reds")
+crossval=cross_val_score(model,x,y,cv=5)
+pca=PCA(n_components=2)
+pca_x=pca.fit_transform(X_train)
+df=pd.DataFrame({
+    "PC1":pca_x[:,0],
+    "PC2":pca_x[:,1],
+    "Class":y_train
+})
+sns.scatterplot(
+    data=df,
+    x="PC1",
+    y="PC2",
+    hue="Class",
+    palette="tab10",
+    s=40
+)
+plt.title("PCA before SMOTE")
+# ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, normalize='true', cmap='Reds')
+# plt.show()
