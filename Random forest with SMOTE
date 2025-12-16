@@ -1,0 +1,44 @@
+from imblearn.over_sampling import SMOTE
+from collections import Counter
+from imblearn.over_sampling import SMOTE
+from sklearn.metrics import ConfusionMatrixDisplay,classification_report,confusion_matrix
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import LabelEncoder
+
+X_train,X_test,Y_train,Y_test=train_test_split(x,y,test_size=0.4,random_state=0)
+smt=SMOTE(random_state=0)
+
+X_train_sm, y_train_sm = smt.fit_resample(X_train, Y_train)
+model=RandomForestClassifier(n_estimators=500,random_state=0)
+
+le = LabelEncoder()
+
+y_train_sm_num = le.fit_transform(y_train_sm)
+names = le.classes_    
+model.fit(X_train_sm,y_train_sm)
+predictions=model.predict(X_test)
+cm=confusion_matrix(Y_test,predictions)
+cr=classification_report(Y_test,predictions,output_dict=True)
+crdf=pd.DataFrame(cr).transpose()
+crdf.to_csv('classification_report_after_smote.csv', index=True)
+
+labels=np.unique(y_test)
+ConfusionMatrixDisplay.from_estimator(model, X_test, Y_test, normalize='true', cmap='Reds')
+plt.show()
+pca=PCA(n_components=2)
+X_pca_sm = pca.fit_transform(X_train_sm)
+df = pd.DataFrame({
+    "PC1": X_pca_sm[:,0],
+    "PC2": X_pca_sm[:,1],
+    "Class": y_train_sm
+})
+
+sns.scatterplot(
+    data=df,
+    x="PC1",
+    y="PC2",
+    hue="Class",        # different colours
+    palette="tab10",
+    s=40
+)
+plt.title("PCA After SMOTE")
